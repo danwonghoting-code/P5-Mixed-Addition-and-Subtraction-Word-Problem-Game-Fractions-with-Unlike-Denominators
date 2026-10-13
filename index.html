@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🌟 五年級異分母冒險之旅 🌟</title>
+<style>
+    :root {
+        --primary: #FF9800; 
+        --secondary: #4CAF50; 
+        --bg-color: #E1F5FE; 
+        --box-bg: #FFFFFF;
+        --text: #37474F;
+        --error: #F44336;
+        --border-radius: 20px;
+    }
+    
+    * { box-sizing: border-box; font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif; }
+    
+    body {
+        margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text);
+        display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+        user-select: none; background-image: radial-gradient(#B3E5FC 20%, transparent 20%);
+        background-size: 20px 20px;
+    }
+
+    #start-screen {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(135deg, #81D4FA, #29B6F6);
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        z-index: 200; text-align: center;
+    }
+    #start-screen h1 { font-size: 4rem; color: white; text-shadow: 2px 4px 0px #0277BD; margin-bottom: 10px; cursor: pointer; }
+    #start-screen p { font-size: 1.5rem; color: white; margin-bottom: 40px; background: rgba(0,0,0,0.2); padding: 10px 20px; border-radius: 15px;}
+    .start-btn {
+        background: #FFCA28; color: #E65100; font-size: 2.5rem; font-weight: bold;
+        padding: 20px 60px; border: none; border-radius: 50px; cursor: pointer;
+        box-shadow: 0 8px 0px #FF8F00, 0 15px 20px rgba(0,0,0,0.2);
+        transition: all 0.1s;
+    }
+    .start-btn:active { transform: translateY(8px); box-shadow: 0 0px 0px #FF8F00, 0 5px 10px rgba(0,0,0,0.2); }
+
+    header {
+        background: white; padding: 15px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        display: flex; justify-content: space-between; align-items: center; font-size: 1.3rem;
+        border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; margin: 0 20px;
+    }
+    .stats { display: flex; gap: 30px; font-weight: bold; color: #0277BD; }
+    #level-display { cursor: pointer; }
+    .score-box { background: #FFF3E0; padding: 5px 15px; border-radius: 20px; color: #E65100; }
+    
+    main { flex: 1; padding: 20px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; }
+    
+    .question-card {
+        background: white; padding: 30px; border-radius: var(--border-radius); width: 95%; max-width: 900px;
+        font-size: 1.5rem; line-height: 1.8; box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        border-top: 8px solid var(--primary); margin-bottom: 20px; position: relative;
+    }
+    
+    .hint-box {
+        display: none; background: #FFEBEE; color: #D32F2F; padding: 15px 20px;
+        border-radius: 15px; border-left: 6px solid #F44336; margin-top: 15px;
+        font-size: 1.2rem; font-weight: bold; animation: popIn 0.3s ease-out;
+    }
+    @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+    .math-workspace {
+        background: white; padding: 25px; border-radius: var(--border-radius); width: 95%; max-width: 900px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.08); display: flex; flex-direction: column; align-items: center; gap: 20px;
+    }
+    
+    .equation-row { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 15px; }
+    
+    .fraction-input-group { 
+        display: flex; align-items: center; gap: 5px; background: #F5F5F5; 
+        padding: 10px; border-radius: 15px; border: 2px solid transparent; transition: 0.3s;
+    }
+    .fraction-input-group.locked { opacity: 0.8; pointer-events: none; border-color: #A5D6A7; background: #E8F5E9; }
+    
+    .fraction-part { display: flex; flex-direction: column; align-items: center; }
+    input[type="number"] {
+        width: 60px; height: 50px; text-align: center; font-size: 1.4rem; font-weight: bold;
+        border: 2px solid #B0BEC5; border-radius: 10px; color: #1565C0; background: white;
+    }
+    input[type="number"]:focus { border-color: var(--primary); outline: none; background: #FFF8E1; }
+    .fraction-line { width: 100%; height: 3px; background: #37474F; margin: 5px 0; border-radius: 2px; }
+    
+    select.operator {
+        font-size: 2rem; padding: 5px 10px; border-radius: 12px; border: 2px solid #B0BEC5; 
+        background: white; color: #FF6D00; font-weight: bold; cursor: pointer;
+    }
+    select.operator:disabled { opacity: 0.8; border-color: #A5D6A7; background: #E8F5E9; }
+
+    .action-btn {
+        background: var(--secondary); color: white; border: none; padding: 15px 40px;
+        font-size: 1.6rem; border-radius: 30px; font-weight: bold; cursor: pointer;
+        box-shadow: 0 6px 0px #388E3C; transition: 0.1s; display: flex; align-items: center; gap: 10px;
+    }
+    .action-btn:active { transform: translateY(6px); box-shadow: 0 0px 0px #388E3C; }
+    .action-btn.stage2-btn { background: var(--primary); box-shadow: 0 6px 0px #E65100; display: none; }
+    .action-btn.stage2-btn:active { box-shadow: 0 0px 0px #E65100; }
+
+    #answer-section { display: none; align-items: center; gap: 15px; margin-top: 10px; animation: popIn 0.4s; }
+    .equals-sign { font-size: 2.5rem; font-weight: bold; color: #FF6D00; }
+    
+    #dev-modal {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85); display: none; z-index: 999;
+        flex-direction: column; padding: 20px; color: #333; justify-content: center; align-items: center;
+    }
+    .dev-content {
+        background: white; border-radius: 20px; padding: 25px;
+        display: flex; flex-direction: column; max-width: 1100px; width: 95%; height: 90%;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow: hidden;
+    }
+    .dev-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+    .dev-body { flex: 1; overflow-y: auto; padding-top: 15px; }
+    .dev-q-card { background: #F8F9FA; border-left: 6px solid #FF9800; padding: 15px; margin-bottom: 15px; border-radius: 10px; font-size: 1.1rem; }
+    .dev-close-btn { background: #F44336; color: white; border: none; padding: 10px 25px; border-radius: 10px; font-size: 1.2rem; cursor: pointer; font-weight: bold; }
+
+    .overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); display: none; flex-direction: column;
+        justify-content: center; align-items: center; z-index: 300;
+    }
+    .popup {
+        background: white; padding: 40px; border-radius: 30px; text-align: center;
+        max-width: 600px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        animation: popIn 0.3s;
+    }
+    .popup h1 { font-size: 2.5rem; color: #FF9800; margin-top: 0; }
+    .popup p { font-size: 1.4rem; line-height: 1.6; color: #455A64; white-space: pre-line; }
+    .popup-btn {
+        background: #4CAF50; color: white; border: none; padding: 15px 40px; font-size: 1.5rem;
+        border-radius: 20px; font-weight: bold; cursor: pointer; margin-top: 20px;
+        box-shadow: 0 6px 0px #388E3C;
+    }
+</style>
+</head>
+<body>
+
+<div id="start-screen">
+    <h1 onclick="secretDevTrigger()">🌟 異分母挑戰之旅 🌟</h1>
+    <p>先列算式，再計答案！小心各種隱藏的數學陷阱！</p>
+    <button class="start-btn" onclick="startGame()">開始遊戲 🚀</button>
+</div>
+
+<header>
+    <div class="stats">
+        <span id="level-display" onclick="secretDevTrigger()">📍 第 1 關 (共 4 關)</span>
+        <span id="progress-display">🎯 進度: 0 / 3</span>
+    </div>
+    <div class="stats">
+        <span id="timer">⏱️ 時間: 00:00</span>
+        <span class="score-box" id="score">🏆 分數: 0</span>
+    </div>
+</header>
+
+<main>
+    <div class="question-card">
+        <div id="question-text">載入題目中...</div>
+        <div class="hint-box" id="hint-msg">💡 提示訊息</div>
+    </div>
+    
+    <div class="math-workspace">
+        <div class="equation-row" id="equation-container"></div>
+        <div id="answer-section">
+            <span class="equals-sign">=</span>
+            <div class="fraction-input-group" id="ansTerm">
+                <input type="number" placeholder="整" class="w">
+                <div class="fraction-part">
+                    <input type="number" placeholder="分子" class="n">
+                    <div class="fraction-line"></div>
+                    <input type="number" placeholder="分母" class="d">
+                </div>
+            </div>
+        </div>
+        <button class="action-btn" id="btn-submit-eq" onclick="checkEquation()">送出算式 📝</button>
+        <button class="action-btn stage2-btn" id="btn-submit-ans" onclick="checkAnswer()">提交最終答案 ✅</button>
+    </div>
+</main>
+
+<div id="dev-modal">
+    <div class="dev-content">
+        <div class="dev-header">
+            <h2>🛠️ 開發者後台：實際遊戲題庫預覽</h2>
+            <button class="dev-close-btn" onclick="closeDevModal()">關閉面板 ✖</button>
+        </div>
+        <div class="dev-body" id="dev-questions-list"></div>
+    </div>
+</div>
+
+<div class="overlay" id="message-overlay">
+    <div class="popup">
+        <h1 id="overlay-title">🎉 通關！</h1>
+        <p id="overlay-desc"></p>
+        <button class="popup-btn" onclick="nextAction()" id="overlay-btn">繼續前進</button>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // 真實題庫預先生成架構
+    // ==========================================
+    let levelQuestions = { 1: [], 2: [], 3: [], 4: [] };
+    let levelIndexes = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    
+    let currentLevel = 1;
+    let questionsNeeded = 3;
+    let questionsCompleted = 0;
+    let score = 0;
+    let combo = 0;
+    let startTime;
+    let timerInterval;
+    let currentQuestion = null;
+    let totalQuestions = 0;
+    let totalMistakes = 0;
+    let usedScenarios = []; 
+    let hasDistractorThisLevel = false;
+
+    window.addEventListener('load', () => { initGameData(); });
+
+    function initGameData() {
+        levelQuestions = { 1: [], 2: [], 3: [], 4: [] };
+        levelIndexes = { 1: 0, 2: 0, 3: 0, 4: 0 };
+        usedScenarios = []; 
+        for (let lvl = 1; lvl <= 4; lvl++) {
+            hasDistractorThisLevel = false;
+            for (let i = 0; i < 3; i++) {
+                levelQuestions[lvl].push(generateQuestionForLevel(lvl, i));
+            }
+        }
+    }
+
+    function generateQuestionForLevel(lvl, qc) {
+        let tChoice = lvl === 4 ? (qc % 3) + 1 : lvl;
+        if (tChoice === 1) return generateQ1(qc);
+        if (tChoice === 2) return generateQ2(qc);
+        return generateQ3(qc);
+    }
+
+    // ==========================================
+    // 數學與陣列工具
+    // ==========================================
+    function gcd(a, b) { return b === 0 ? Math.abs(a) : gcd(b, a % b); }
+    function lcm(a, b) { return Math.abs(a * b) / gcd(a, b); }
+    const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    
+    class Fraction {
+        constructor(w, n, d) {
+            this.w = parseInt(w) || 0; this.n = parseInt(n) || 0; this.d = parseInt(d) || 1;
+            if (this.n === 0) this.d = 1; 
+        }
+        static value(f) { return (parseInt(f.w) || 0) + ((parseInt(f.n) || 0) / (parseInt(f.d) || 1)); }
+        static isSimplest(w, n, d) {
+            w = parseInt(w)||0; n = parseInt(n)||0; d = parseInt(d)||1;
+            if (n === 0) return true; 
+            if (n >= d) return false; 
+            return gcd(n, d) === 1;   
+        }
+        static formatHTML(w, n, d) {
+            let html = '<span style="display:inline-flex; align-items:center; vertical-align:middle; margin:0 4px; font-weight:bold; color:#1565C0;">';
+            if (w > 0) html += `<span style="margin-right:2px;">${w}</span>`;
+            if (n > 0) html += `<span style="display:flex; flex-direction:column; align-items:center; font-size:1.1rem; line-height:1.2;"><span>${n}</span><span style="width:100%; height:2px; background:#1565C0; margin:1px 0;"></span><span>${d}</span></span>`;
+            if (w === 0 && n === 0) html += `<span>0</span>`;
+            html += '</span>';
+            return html;
+        }
+    }
+
+    function evalEq(terms, ops) {
+        let val = Fraction.value(terms[0]);
+        for (let i = 0; i < ops.length; i++) {
+            val = ops[i] === '+' ? val + Fraction.value(terms[i+1]) : val - Fraction.value(terms[i+1]);
+        }
+        return val;
+    }
+
+    function getFinalDenom(terms, ops) {
+        let currLcd = 1;
+        for (let t of terms) currLcd = lcm(currLcd, t.d);
+        let finalN = (terms[0].w * terms[0].d + terms[0].n) * (currLcd / terms[0].d);
+        for (let i = 0; i < ops.length; i++) {
+            let tN = (terms[i+1].w * terms[i+1].d + terms[i+1].n) * (currLcd / terms[i+1].d);
+            finalN = ops[i] === '+' ? finalN + tN : finalN - tN;
+        }
+        if (finalN === 0) return 1;
+        let g = gcd(Math.abs(finalN), currLcd);
+        return currLcd / g;
+    }
+
+    function checkSimp(terms, ops) {
+        let currLcd = 1;
+        for (let t of terms) currLcd = lcm(currLcd, t.d);
+        let finalN = (terms[0].w * terms[0].d + terms[0].n) * (currLcd / terms[0].d);
+        for (let i = 0; i < ops.length; i++) {
+            let tN = (terms[i+1].w * terms[i+1].d + terms[i+1].n) * (currLcd / terms[i+1].d);
+            finalN = ops[i] === '+' ? finalN + tN : finalN - tN;
+        }
+        if (finalN <= 0) return false;
+        return gcd(finalN, currLcd) > 1; 
+    }
+
+    const denomPairs = [
+        [2, 4, 8], [4, 8, 16], [3, 8, 24], [4, 6, 24], [6, 8, 24], 
+        [5, 10, 30], [6, 10, 30], [8, 16, 32], [4, 12, 36], [9, 12, 36], 
+        [6, 16, 48], [12, 16, 48], [10, 15, 60], [15, 20, 60],
+        [2, 3, 5], [2, 3, 7], [3, 4, 5], [2, 5, 7],
+        [6, 9, 18], [6, 8, 12], [8, 12, 16], [10, 15, 20], [6, 10, 15], 
+        [6, 14, 21], [8, 10, 20], [10, 25, 50], [12, 15, 18], [14, 21, 42]
+    ];
+    function getDenominators() { return denomPairs[rand(0, denomPairs.length - 1)]; }
+
+    // ==========================================
+    // 情景題庫與生成器 (加入熔斷機制防止死迴圈)
+    // ==========================================
+    function getScenario(pool) {
+        let sc;
+        let attempts = 0;
+        do { 
+            sc = pool[rand(0, pool.length - 1)]; 
+            attempts++;
+            if (attempts > 50) break; // 安全跳脫，防止池子耗盡時卡死瀏覽器
+        } while (usedScenarios.includes(sc.join('')));
+        usedScenarios.push(sc.join(''));
+        return sc;
+    }
+
+    const s1_new = [['行李', '第一件行李', '第二件行李', '公斤', '手提包', '重', '輕', '重'], ['果汁', '哥哥', '弟弟', '升', '妹妹', '多', '少', '喝去'], ['動物', '小狗', '小貓', '公斤', '小兔', '重', '輕', '重'], ['零用錢', '昨天', '今天', '元', '前天', '多', '少', '用去'], ['跑步', '昨天', '今天', '公里', '前天', '多', '少', '跑了'], ['絲帶', '紅絲帶', '藍絲帶', '米', '黃絲帶', '長', '短', '長']];
+    const s2_typeA = [['老師有', '原子筆', '枝', '黑色原子筆', '藍色原子筆', '紅色原子筆'], ['一份數學測驗卷有', '題目', '題', '甲部題目', '乙部題目', '丙部題目'], ['書架上有', '圖書', '本', '故事書', '科普書', '漫畫書'], ['箱子裡有', '積木', '個', '紅色積木', '藍色積木', '綠色積木']];
+    const s2_typeB = [['果仁', '吃去', '買了', 'kg'], ['牛奶', '喝去', '買了', '升'], ['麵粉', '用去', '買了', '公斤'], ['絲帶', '剪去', '買回', '米']];
+    const s2_typeC = [['單車徑', '甲段', '乙段', '丙段'], ['芝士蛋糕', '原味', '檸檬味', '綠茶味'], ['長跑比賽', '首段', '中段', '尾段'], ['旅行預算', '交通', '住宿', '飲食']];
+    const s3 = [['盒', '件', 9, '草餅'], ['包', '塊', 14, '米餅'], ['箱', '瓶', 12, '綠茶'], ['打', '枝', 12, '鉛筆'], ['排', '樽', 6, '益力多'], ['袋', '粒', 20, '糖果'], ['籠', '隻', 4, '蝦餃'], ['碟', '塊', 8, '壽司'], ['筒', '塊', 10, '曲奇'], ['盒', '粒', 15, '朱古力'], ['籃', '個', 24, '蘋果'], ['紮', '朵', 12, '玫瑰花'], ['條', '格', 10, '衛生紙'], ['盒', '罐', 8, '汽水'], ['串', '粒', 6, '魚蛋'], ['包', '條', 20, '香腸'], ['箱', '包', 16, '紙巾'], ['疊', '張', 24, '畫紙'], ['瓶', '粒', 30, '維他命'], ['網', '個', 6, '柚子']];
+
+    function generateQ1(qc = 0) { 
+        let isDistractor = !hasDistractorThisLevel && (Math.random() < 0.4 || qc >= 2);
+        if (isDistractor) hasDistractorThisLevel = true;
+        let sc = getScenario(s1_new); // 提取在迴圈外部，極其重要！
+        let bestQ = null, attempts = 0;
+        
+        do {
+            let d = getDenominators();
+            let A = new Fraction(rand(4, 9), rand(1, d[0]-1), d[0]);
+            let diff = new Fraction(rand(1, 3), rand(1, d[1]-1), d[1]);
+            while (gcd(A.n, A.d) !== 1) A.n = rand(1, d[0]-1);
+            while (gcd(diff.n, diff.d) !== 1) diff.n = rand(1, d[1]-1);
+            
+            let isReverse = rand(0, 1) === 1; 
+            let isMore = rand(0, 1) === 1; 
+            let opForB = isReverse ? (isMore ? '-' : '+') : (isMore ? '+' : '-'); 
+
+            let valA = Fraction.value(A);
+            let valDiff = Fraction.value(diff);
+            let valB = opForB === '+' ? valA + valDiff : valA - valDiff;
+
+            if (valB > 0) {
+                let terms = [A, A, diff]; 
+                let ops = ['+', opForB];
+                if (checkSimp(terms, ops) && getFinalDenom(terms, ops) <= 12) {
+                    let distractorV = new Fraction(rand(1, 5), rand(1, d[2]-1), d[2]);
+                    while (gcd(distractorV.n, distractorV.d) !== 1) distractorV.n = rand(1, d[2]-1);
+                    bestQ = {A, diff, valB, valTotal: valA + valB, terms, ops, isReverse, isMore, isDistractor, distractorV};
+                    break;
+                }
+            }
+            attempts++;
+        } while (attempts < 1500);
+
+        if (!bestQ) {
+            let A = new Fraction(5, 1, 4), diff = new Fraction(1, 1, 4);
+            bestQ = {A, diff, valB: 4, valTotal: 9.25, terms: [A, A, diff], ops: ['+', '-'], isReverse: true, isMore: true, isDistractor: false, distractorV: new Fraction(2, 1, 2)};
+        }
+
+        let q = bestQ;
+        let text = `${sc[1]}${sc[7]} ${Fraction.formatHTML(q.A.w, q.A.n, q.A.d)}${sc[3]}，`;
+        let adj = q.isMore ? sc[5] : sc[6]; 
+        if (q.isReverse) text += `${sc[1]}比${sc[2]}${adj} ${Fraction.formatHTML(q.diff.w, q.diff.n, q.diff.d)}${sc[3]}。`;
+        else text += `${sc[2]}比${sc[1]}${adj} ${Fraction.formatHTML(q.diff.w, q.diff.n, q.diff.d)}${sc[3]}。`;
+        if (q.isDistractor) text += `另外，${sc[4]}${sc[7]} ${Fraction.formatHTML(q.distractorV.w, q.distractorV.n, q.distractorV.d)}${sc[3]}。`;
+        text += `<br>問${sc[1]}和${sc[2]}共${sc[7]}多少${sc[3]}？`;
+        return { text, terms: q.terms, ops: q.ops, ansVal: q.valTotal, valB: q.valB, isType2: false };
+    }
+
+    function generateQ2(qc = 0) { 
+        let typeChoice = (qc % 3) + 1; 
+        let bestQ = null, attempts = 0;
+        let d, v1, v2, v3, terms, ops, val;
+        let distractorNum = 0;
+
+        do {
+            d = getDenominators();
+            let n2 = rand(1, d[0] - 1);
+            while (gcd(n2, d[0]) !== 1) n2 = rand(1, d[0] - 1);
+            let n3 = rand(1, d[1] - 1);
+            while (gcd(n3, d[1]) !== 1) n3 = rand(1, d[1] - 1);
+
+            v1 = new Fraction(1, 0, 1);
+            v2 = new Fraction(0, n2, d[0]);
+            v3 = new Fraction(0, n3, d[1]);
+
+            if (typeChoice === 1 || typeChoice === 3) {
+                terms = [v1, v2, v3];
+                ops = ['-', '-'];
+            } else {
+                terms = [v1, v2, v3];
+                ops = ['-', '+'];
+            }
+            
+            val = evalEq(terms, ops);
+            if (val > 0 && val < 2) { 
+                if (checkSimp(terms, ops) && getFinalDenom(terms, ops) <= 12) {
+                    if (typeChoice === 1) distractorNum = rand(2, 30); 
+                    bestQ = {v1, v2, v3, terms, ops, val, typeChoice, distractorNum};
+                    break;
+                }
+            }
+            attempts++;
+        } while (attempts < 1500);
+
+        if (!bestQ) {
+            v1 = new Fraction(1, 0, 1); v2 = new Fraction(0, 1, 4); v3 = new Fraction(0, 1, 4);
+            let valFB = typeChoice === 2 ? 1 : 0.5;
+            let opsFB = typeChoice === 2 ? ['-', '+'] : ['-', '-'];
+            bestQ = {v1, v2, v3, terms: [v1, v2, v3], ops: opsFB, val: valFB, typeChoice: typeChoice, distractorNum: rand(2, 30)};
+        }
+
+        let q = bestQ;
+        let text = "";
+
+        if (q.typeChoice === 1) {
+            let sc = getScenario(s2_typeA);
+            text = `${sc[0]}${q.distractorNum} ${sc[2]}，其中${sc[3]}佔 ${Fraction.formatHTML(q.v2.w, q.v2.n, q.v2.d)}，${sc[4]}佔 ${Fraction.formatHTML(q.v3.w, q.v3.n, q.v3.d)}，餘下的是${sc[5]}。<br>${sc[5]}佔全部${sc[1]}的幾分之幾？`;
+        } else if (q.typeChoice === 2) {
+            let sc = getScenario(s2_typeB);
+            text = `家中原有${sc[0]} 1${sc[3]}，${sc[1]}${Fraction.formatHTML(q.v2.w, q.v2.n, q.v2.d)} ${sc[3]}後，爸爸又${sc[2]} ${Fraction.formatHTML(q.v3.w, q.v3.n, q.v3.d)}${sc[3]}回家，家中現有${sc[0]}多少 ${sc[3]}？`;
+        } else {
+            let sc = getScenario(s2_typeC);
+            text = `${sc[0]}分成${sc[1]}、${sc[2]}和${sc[3]}三部分。${sc[1]}佔全部的 ${Fraction.formatHTML(q.v2.w, q.v2.n, q.v2.d)}，${sc[2]}佔全部的 ${Fraction.formatHTML(q.v3.w, q.v3.n, q.v3.d)}。<br>${sc[3]}佔全部的幾分之幾？`;
+        }
+        
+        return { text, terms: q.terms, ops: q.ops, ansVal: q.val, isType2: true, distractorNum: q.distractorNum, typeChoice: q.typeChoice };
+    }
+
+    function generateQ3(qc = 0) { 
+        let typeChoice = (qc % 3) + 1; 
+        let bestQ = null, attempts = 0;
+        let d2, v1, v2, v3, terms, ops, val;
+        let pcs_used = 0, pcs_used2 = 0;
+        
+        let allValidD = [2,3,4,5,6,7,8,9,10,12,14,15,16,18,20,24,25,30,32,36,48,50,60];
+
+        // 【核心修復】將抽取場景移至高頻運算迴圈外，防止池子乾涸卡死瀏覽器！
+        let sc = getScenario(s3);
+        let pcs = sc[2];
+
+        do {
+            let validD = allValidD.filter(x => lcm(x, pcs) <= 60);
+            if (validD.length === 0) validD = [2, 3, 4];
+            d2 = validD[rand(0, validD.length - 1)];
+
+            if (typeChoice === 1) { 
+                let w = rand(3, 6);
+                pcs_used = rand(1, pcs - 1);
+                let f2_w = rand(0, 2);
+                let f2_n = rand(1, d2 - 1);
+                while (gcd(f2_n, d2) !== 1) f2_n = rand(1, d2 - 1);
+
+                v1 = new Fraction(w, 0, 1);
+                v2 = new Fraction(0, pcs_used, pcs);
+                v3 = new Fraction(f2_w, f2_n, d2);
+                terms = [v1, v2, v3];
+                ops = ['-', '-'];
+            } else if (typeChoice === 2) { 
+                pcs_used = rand(1, pcs - 1);
+                let f1_n = rand(1, d2 - 1);
+                while (gcd(f1_n, d2) !== 1) f1_n = rand(1, d2 - 1);
+
+                v1 = new Fraction(0, f1_n, d2);
+                v2 = new Fraction(0, pcs_used, pcs);
+                terms = [v1, v2];
+                ops = ['+'];
+            } else { 
+                let w = rand(1, 3);
+                let f1_n = rand(1, d2 - 1);
+                while (gcd(f1_n, d2) !== 1) f1_n = rand(1, d2 - 1);
+                pcs_used = rand(1, pcs - 1);
+                pcs_used2 = rand(1, pcs - 1);
+
+                v1 = new Fraction(w, f1_n, d2);
+                v2 = new Fraction(0, pcs_used, pcs);
+                v3 = new Fraction(0, pcs_used2, pcs);
+                terms = [v1, v2, v3];
+                ops = ['-', '+'];
+            }
+
+            val = evalEq(terms, ops);
+            if (val > 0 && checkSimp(terms, ops) && getFinalDenom(terms, ops) <= 12) {
+                bestQ = {v1, v2, v3, terms, ops, val, typeChoice, sc, pcs_used, pcs_used2};
+                break;
+            }
+            attempts++;
+        } while (attempts < 2000);
+
+        if (!bestQ) {
+            let scFB = ['盒', '件', 10, '曲奇'];
+            v1 = new Fraction(3, 0, 1); v2 = new Fraction(0, 5, 10); v3 = new Fraction(1, 1, 2);
+            bestQ = {v1, v2, v3, terms: [v1, v2, v3], ops: ['-', '-'], val: 1, typeChoice: 1, sc: scFB, pcs_used: 5, pcs_used2: 0};
+        }
+
+        let q = bestQ;
+        let text = "";
+        let F_html = (f) => Fraction.formatHTML(f.w, f.n, f.d);
+
+        if (q.typeChoice === 1) {
+            text = `家中原有${q.sc[3]}${q.v1.w} ${q.sc[0]}，每${q.sc[0]}有 ${q.sc[2]}${q.sc[1]}。昨天吃了 ${q.pcs_used}${q.sc[1]}，今天再吃了 ${F_html(q.v3)}${q.sc[0]}，<br>還有${q.sc[3]}多少${q.sc[0]}？`;
+        } else if (q.typeChoice === 2) {
+            text = `一${q.sc[0]}${q.sc[3]}有 ${q.sc[2]}${q.sc[1]}。卓楠把 ${F_html(q.v1)}${q.sc[0]}送給諾言，再把 ${q.pcs_used}${q.sc[1]}送給芷柔。<br>卓楠共送出${q.sc[3]}多少${q.sc[0]}？`;
+        } else {
+            text = `店內原有${q.sc[3]}${F_html(q.v1)} ${q.sc[0]}，每${q.sc[0]}有 ${q.sc[2]}${q.sc[1]}。上午售出 ${q.pcs_used}${q.sc[1]}後，下午又進貨了 ${q.pcs_used2}${q.sc[1]}，<br>現在店內共有${q.sc[3]}多少${q.sc[0]}？`;
+        }
+
+        return { text, terms: q.terms, ops: q.ops, ansVal: q.val, isType3: true, pcs: q.sc[2], pcs_used: q.pcs_used, pcs_used2: q.pcs_used2 };
+    }
+
+    // ==========================================
+    // 遊戲流程與面板控制
+    // ==========================================
+    let clickCount = 0;
+    let clickTimer = null;
+    
+    function secretDevTrigger() {
+        clickCount++;
+        if (clickTimer) clearTimeout(clickTimer);
+        clickTimer = setTimeout(() => { clickCount = 0; }, 1000);
+        if (clickCount >= 5) {
+            clickCount = 0;
+            openDevModal();
+        }
+    }
+
+    window.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'Q' || e.key === 'q')) {
+            e.preventDefault();
+            openDevModal();
+        }
+    });
+
+    function openDevModal() {
+        const listContainer = document.getElementById('dev-questions-list');
+        listContainer.innerHTML = '';
+        
+        for (let lvl = 1; lvl <= 4; lvl++) {
+            let lvlHeader = document.createElement('h3');
+            lvlHeader.style.color = "#0277BD";
+            lvlHeader.style.marginTop = "20px";
+            lvlHeader.innerText = `📦 -------------------- 第 ${lvl} 關 --------------------`;
+            listContainer.appendChild(lvlHeader);
+
+            let qList = levelQuestions[lvl];
+            for (let i = 0; i < qList.length; i++) {
+                let q = qList[i];
+                let isPlayed = (lvl < currentLevel) || (lvl === currentLevel && i < levelIndexes[lvl]);
+                let isCurrent = (lvl === currentLevel && i === levelIndexes[lvl]);
+                let statusSpan = isPlayed ? `<span style="color:#9E9E9E; font-size:0.9rem;">(已作答)</span>` : 
+                                 isCurrent ? `<span style="color:#FF4081; font-size:0.9rem; font-weight:bold;">(目前題目)</span>` : ``;
+                
+                let card = document.createElement('div');
+                card.className = 'dev-q-card';
+                card.innerHTML = `<strong>題目 ${i + 1}：</strong> ${statusSpan} <br>${q.text}<br>
+                                  <span style="color: #388E3C; font-weight: bold;">➡️ 正確計算數值：${q.ansVal.toFixed(4)}</span>`;
+                listContainer.appendChild(card);
+            }
+        }
+        document.getElementById('dev-modal').style.display = 'flex';
+    }
+
+    function closeDevModal() { document.getElementById('dev-modal').style.display = 'none'; }
+
+    function startGame() {
+        document.getElementById('start-screen').style.display = 'none';
+        startTime = Date.now();
+        timerInterval = setInterval(updateTimer, 1000);
+        loadLevel();
+    }
+
+    function updateTimer() {
+        const diff = Math.floor((Date.now() - startTime) / 1000);
+        const m = String(Math.floor(diff / 60)).padStart(2, '0');
+        const s = String(diff % 60).padStart(2, '0');
+        document.getElementById('timer').innerText = `⏱️ 時間: ${m}:${s}`;
+    }
+
+    function loadLevel() {
+        if (currentLevel > 4) { endGame(); return; }
+        questionsNeeded = levelQuestions[currentLevel].length;
+        questionsCompleted = levelIndexes[currentLevel];
+        updateUI();
+        nextQuestion();
+    }
+
+    function nextQuestion() {
+        hideHint();
+        try {
+            currentQuestion = levelQuestions[currentLevel][levelIndexes[currentLevel]];
+            document.getElementById('question-text').innerHTML = currentQuestion.text;
+            buildEquationUI();
+            
+            document.getElementById('answer-section').style.display = 'none';
+            document.getElementById('btn-submit-eq').style.display = 'block';
+            document.getElementById('btn-submit-ans').style.display = 'none';
+        } catch (error) { 
+            console.error(error);
+            document.getElementById('question-text').innerHTML = "載入題目發生錯誤，請重新整理網頁！"; 
+        }
+    }
+
+    function buildEquationUI() {
+        const container = document.getElementById('equation-container');
+        container.innerHTML = '';
+        let termCount = currentQuestion.terms.length;
+        for (let i = 0; i < termCount; i++) {
+            if (i > 0) container.innerHTML += `<select class="operator" id="op${i-1}"><option value="+">+</option><option value="-">-</option></select>`;
+            container.innerHTML += `
+                <div class="fraction-input-group" id="term${i}">
+                    <input type="number" placeholder="整" class="w">
+                    <div class="fraction-part">
+                        <input type="number" placeholder="分子" class="n">
+                        <div class="fraction-line"></div>
+                        <input type="number" placeholder="分母" class="d">
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    function showHint(msg) {
+        const box = document.getElementById('hint-msg');
+        box.innerText = `💡 ${msg}`;
+        box.style.display = 'block';
+        setTimeout(() => { box.style.display = 'none'; }, 7000); 
+    }
+    function hideHint() { document.getElementById('hint-msg').style.display = 'none'; }
+
+    function applyPenalty() {
+        score = Math.max(0, score - 10);
+        combo = 0;
+        questionsNeeded++; 
+        totalMistakes++;
+        
+        let qc = levelQuestions[currentLevel].length;
+        levelQuestions[currentLevel].push(generateQuestionForLevel(currentLevel, qc));
+        
+        updateUI();
+    }
+
+    function checkEquation() {
+        let termCount = currentQuestion.terms.length;
+        let studentTerms = [];
+        let studentOps = [];
+        for (let i = 0; i < termCount; i++) {
+            let w = document.querySelector(`#term${i} .w`).value;
+            let n = document.querySelector(`#term${i} .n`).value;
+            let d = document.querySelector(`#term${i} .d`).value;
+            studentTerms.push(new Fraction(w, n, d));
+            if (i < termCount - 1) studentOps.push(document.getElementById(`op${i}`).value);
+        }
+
+        let studentVal = evalEq(studentTerms, studentOps);
+
+        if (Math.abs(studentVal - currentQuestion.ansVal) < 0.0001) {
+            hideHint();
+            for(let i=0; i<termCount; i++) {
+                document.getElementById(`term${i}`).classList.add('locked');
+                document.querySelectorAll(`#term${i} input`).forEach(inp => inp.disabled = true);
+                if (i < termCount - 1) document.getElementById(`op${i}`).disabled = true;
+            }
+            document.getElementById('btn-submit-eq').style.display = 'none';
+            document.getElementById('btn-submit-ans').style.display = 'flex';
+            document.getElementById('answer-section').style.display = 'flex';
+            document.querySelector('#ansTerm .w').value = '';
+            document.querySelector('#ansTerm .n').value = '';
+            document.querySelector('#ansTerm .d').value = '';
+            document.querySelector('#ansTerm .w').focus();
+        } else {
+            applyPenalty();
+            
+            if (currentQuestion.isType3) {
+                let trap1 = false, trap2 = false;
+                for(let i=0; i<studentTerms.length; i++) {
+                    let st = studentTerms[i];
+                    let val = Fraction.value(st);
+                    if (Math.abs(val - currentQuestion.pcs_used) < 0.0001 || (currentQuestion.pcs_used2 && Math.abs(val - currentQuestion.pcs_used2) < 0.0001)) trap1 = true;
+                    if ((st.n === currentQuestion.pcs_used || (currentQuestion.pcs_used2 && st.n === currentQuestion.pcs_used2)) && st.d !== currentQuestion.pcs && st.d !== 1) trap2 = true;
+                }
+                if (trap1) { showHint(`⚠️ 單位陷阱！題目裡的「小單位」不能直接拿來跟「大單位」加減喔！想一想，1 份大單位有 ${currentQuestion.pcs} 個小單位，那你要怎麼把它換算成大單位呢？扣10分並加一題。`); return; }
+                if (trap2) { showHint(`⚠️ 分母錯誤！請仔細看題目，每一大單位裡面有「${currentQuestion.pcs}」個小單位！要把小單位變成大單位，分母應該填多少？扣10分並加一題。`); return; }
+            }
+            
+            if (currentQuestion.isType2) {
+                if (currentQuestion.distractorNum && parseInt(studentTerms[0].w) === currentQuestion.distractorNum) {
+                    showHint(`⚠️ 題目問的是「佔整體的幾分之幾」，前面的「${currentQuestion.distractorNum}」是多餘數據！計算比例時，整體要用數字 1 來表示喔！扣10分並加一題。`);
+                    return;
+                }
+                if (parseInt(studentTerms[0].w) !== 1) {
+                    showHint("這題是求整體的剩餘比例或對原有 1 單位的操作，記得一開始被減的整體要用數字 1 來表示喔！扣10分並加一題。");
+                    return;
+                }
+            }
+
+            let opsMatch = true;
+            for(let i=0; i<studentOps.length; i++) if(studentOps[i] !== currentQuestion.ops[i]) opsMatch = false;
+
+            if (!opsMatch) showHint("算式符號邏輯不太對喔！請仔細閱讀題目，想清楚是用加還是減。扣10分並加一題。");
+            else showHint("你輸入的數字好像跟題目不一樣，請仔細檢查題目數據。扣10分並加一題。");
+        }
+    }
+
+    function checkAnswer() {
+        const wStr = document.querySelector('#ansTerm .w').value;
+        const nStr = document.querySelector('#ansTerm .n').value;
+        const dStr = document.querySelector('#ansTerm .d').value;
+        const ansF = new Fraction(wStr, nStr, dStr);
+        const studentAnsVal = Fraction.value(ansF);
+        
+        if (Math.abs(studentAnsVal - currentQuestion.ansVal) < 0.0001) {
+            if (!Fraction.isSimplest(wStr, nStr, dStr)) {
+                applyPenalty();
+                showHint("答案數值正確，但分數部分還沒有約簡為「最簡分數」，或者假分數還沒化為帶分數喔！扣10分並加一題。");
+                return;
+            }
+            score += 20; combo++; if (combo >= 2) score += 10;
+            questionsCompleted++; 
+            totalQuestions++;
+            levelIndexes[currentLevel]++; 
+            
+            if (questionsCompleted >= questionsNeeded) {
+                showPopup(`📍 第 ${currentLevel} 關完成！`, `太厲害了！\n準備進入下一關\n目前累積總分: ${score} 分`);
+            } else { 
+                updateUI(); 
+                nextQuestion(); 
+            }
+        } else {
+            applyPenalty();
+            showHint("計算結果有誤，請再仔細檢查通分和加減的計算過程！扣10分並加一題。");
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('level-display').innerText = `📍 第 ${currentLevel} 關 (共 4 關)`;
+        document.getElementById('progress-display').innerText = `🎯 進度: ${questionsCompleted} / ${questionsNeeded}`;
+        document.getElementById('score').innerText = `🏆 分數: ${score} (連擊: ${combo})`;
+    }
+
+    function showPopup(title, desc) {
+        document.getElementById('overlay-title').innerText = title;
+        document.getElementById('overlay-desc').innerText = desc;
+        document.getElementById('message-overlay').style.display = 'flex';
+    }
+
+    function nextAction() {
+        document.getElementById('message-overlay').style.display = 'none';
+        if (currentLevel > 4) {
+            location.reload(); 
+        } else if (questionsCompleted >= questionsNeeded) {
+            currentLevel++;
+            if(currentLevel > 4) endGame(); else loadLevel();
+        }
+    }
+
+    function endGame() {
+        clearInterval(timerInterval);
+        const timeStr = document.getElementById('timer').innerText;
+        const accuracy = Math.round((totalQuestions / (totalQuestions + totalMistakes)) * 100) || 0;
+        showPopup("🏆 冒險總結算 🏆", `最終得分: ${score}\n${timeStr}\n成功答對: ${totalQuestions} 題\n失誤次數: ${totalMistakes} 次\n正確率: ${accuracy}%\n\n恭喜你成為異分母計算大師！`);
+        document.getElementById('overlay-btn').innerText = "再玩一次";
+    }
+</script>
+</body>
+</html>
