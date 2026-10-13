@@ -217,6 +217,7 @@
     let totalMistakes = 0;
     let usedScenarios = []; 
     let hasDistractorThisLevel = false;
+    let hasPenalizedCurrentQuestion = false; // ★ 新增：追蹤目前題目是否已經加過題
 
     window.addEventListener('load', () => { initGameData(); });
 
@@ -312,7 +313,7 @@
     function getDenominators() { return denomPairs[rand(0, denomPairs.length - 1)]; }
 
     // ==========================================
-    // 情景題庫與生成器 (加入熔斷機制防止死迴圈)
+    // 情景題庫與生成器
     // ==========================================
     function getScenario(pool) {
         let sc;
@@ -320,7 +321,7 @@
         do { 
             sc = pool[rand(0, pool.length - 1)]; 
             attempts++;
-            if (attempts > 50) break; // 安全跳脫，防止池子耗盡時卡死瀏覽器
+            if (attempts > 50) break;
         } while (usedScenarios.includes(sc.join('')));
         usedScenarios.push(sc.join(''));
         return sc;
@@ -335,7 +336,7 @@
     function generateQ1(qc = 0) { 
         let isDistractor = !hasDistractorThisLevel && (Math.random() < 0.4 || qc >= 2);
         if (isDistractor) hasDistractorThisLevel = true;
-        let sc = getScenario(s1_new); // 提取在迴圈外部，極其重要！
+        let sc = getScenario(s1_new);
         let bestQ = null, attempts = 0;
         
         do {
@@ -449,7 +450,6 @@
         
         let allValidD = [2,3,4,5,6,7,8,9,10,12,14,15,16,18,20,24,25,30,32,36,48,50,60];
 
-        // 【核心修復】將抽取場景移至高頻運算迴圈外，防止池子乾涸卡死瀏覽器！
         let sc = getScenario(s3);
         let pcs = sc[2];
 
@@ -600,6 +600,7 @@
 
     function nextQuestion() {
         hideHint();
+        hasPenalizedCurrentQuestion = false; // ★ 進入新題目時，重置加題狀態
         try {
             currentQuestion = levelQuestions[currentLevel][levelIndexes[currentLevel]];
             document.getElementById('question-text').innerHTML = currentQuestion.text;
@@ -641,16 +642,26 @@
     }
     function hideHint() { document.getElementById('hint-msg').style.display = 'none'; }
 
+    // ★ 重構的懲罰系統：回傳動態提示文字
     function applyPenalty() {
         score = Math.max(0, score - 10);
         combo = 0;
-        questionsNeeded++; 
         totalMistakes++;
         
-        let qc = levelQuestions[currentLevel].length;
-        levelQuestions[currentLevel].push(generateQuestionForLevel(currentLevel, qc));
+        let penaltyMessage = "扣 10 分。";
+        
+        // 只有這題第一次答錯時，才會增加總題數並將新題目塞入題庫陣列
+        if (!hasPenalizedCurrentQuestion) {
+            questionsNeeded++; 
+            let qc = levelQuestions[currentLevel].length;
+            levelQuestions[currentLevel].push(generateQuestionForLevel(currentLevel, qc));
+            
+            hasPenalizedCurrentQuestion = true;
+            penaltyMessage = "扣 10 分並加一題。";
+        }
         
         updateUI();
+        return penaltyMessage;
     }
 
     function checkEquation() {
@@ -682,7 +693,7 @@
             document.querySelector('#ansTerm .d').value = '';
             document.querySelector('#ansTerm .w').focus();
         } else {
-            applyPenalty();
+            let pText = applyPenalty(); // ★ 取得動態懲罰文字
             
             if (currentQuestion.isType3) {
                 let trap1 = false, trap2 = false;
@@ -692,17 +703,17 @@
                     if (Math.abs(val - currentQuestion.pcs_used) < 0.0001 || (currentQuestion.pcs_used2 && Math.abs(val - currentQuestion.pcs_used2) < 0.0001)) trap1 = true;
                     if ((st.n === currentQuestion.pcs_used || (currentQuestion.pcs_used2 && st.n === currentQuestion.pcs_used2)) && st.d !== currentQuestion.pcs && st.d !== 1) trap2 = true;
                 }
-                if (trap1) { showHint(`⚠️ 單位陷阱！題目裡的「小單位」不能直接拿來跟「大單位」加減喔！想一想，1 份大單位有 ${currentQuestion.pcs} 個小單位，那你要怎麼把它換算成大單位呢？扣10分並加一題。`); return; }
-                if (trap2) { showHint(`⚠️ 分母錯誤！請仔細看題目，每一大單位裡面有「${currentQuestion.pcs}」個小單位！要把小單位變成大單位，分母應該填多少？扣10分並加一題。`); return; }
+                if (trap1) { showHint(`⚠️ 單位陷阱！題目裡的「小單位」不能直接拿來跟「大單位」加減喔！想一想，1 份大單位有 ${currentQuestion.pcs} 個小單位，那你要怎麼把它換算成大單位呢？${pText}`); return; }
+                if (trap2) { showHint(`⚠️ 分母錯誤！請仔細看題目，每一大單位裡面有「${currentQuestion.pcs}」個小單位！要把小單位變成大單位，分母應該填多少？${pText}`); return; }
             }
             
             if (currentQuestion.isType2) {
                 if (currentQuestion.distractorNum && parseInt(studentTerms[0].w) === currentQuestion.distractorNum) {
-                    showHint(`⚠️ 題目問的是「佔整體的幾分之幾」，前面的「${currentQuestion.distractorNum}」是多餘數據！計算比例時，整體要用數字 1 來表示喔！扣10分並加一題。`);
+                    showHint(`⚠️ 題目問的是「佔整體的幾分之幾」，前面的「${currentQuestion.distractorNum}」是多餘數據！計算比例時，整體要用數字 1 來表示喔！${pText}`);
                     return;
                 }
                 if (parseInt(studentTerms[0].w) !== 1) {
-                    showHint("這題是求整體的剩餘比例或對原有 1 單位的操作，記得一開始被減的整體要用數字 1 來表示喔！扣10分並加一題。");
+                    showHint(`這題是求整體的剩餘比例或對原有 1 單位的操作，記得一開始被減的整體要用數字 1 來表示喔！${pText}`);
                     return;
                 }
             }
@@ -710,8 +721,8 @@
             let opsMatch = true;
             for(let i=0; i<studentOps.length; i++) if(studentOps[i] !== currentQuestion.ops[i]) opsMatch = false;
 
-            if (!opsMatch) showHint("算式符號邏輯不太對喔！請仔細閱讀題目，想清楚是用加還是減。扣10分並加一題。");
-            else showHint("你輸入的數字好像跟題目不一樣，請仔細檢查題目數據。扣10分並加一題。");
+            if (!opsMatch) showHint(`算式符號邏輯不太對喔！請仔細閱讀題目，想清楚是用加還是減。${pText}`);
+            else showHint(`你輸入的數字好像跟題目不一樣，請仔細檢查題目數據。${pText}`);
         }
     }
 
@@ -724,8 +735,8 @@
         
         if (Math.abs(studentAnsVal - currentQuestion.ansVal) < 0.0001) {
             if (!Fraction.isSimplest(wStr, nStr, dStr)) {
-                applyPenalty();
-                showHint("答案數值正確，但分數部分還沒有約簡為「最簡分數」，或者假分數還沒化為帶分數喔！扣10分並加一題。");
+                let pText = applyPenalty(); // ★ 取得動態懲罰文字
+                showHint(`答案數值正確，但分數部分還沒有約簡為「最簡分數」，或者假分數還沒化為帶分數喔！${pText}`);
                 return;
             }
             score += 20; combo++; if (combo >= 2) score += 10;
@@ -740,8 +751,8 @@
                 nextQuestion(); 
             }
         } else {
-            applyPenalty();
-            showHint("計算結果有誤，請再仔細檢查通分和加減的計算過程！扣10分並加一題。");
+            let pText = applyPenalty(); // ★ 取得動態懲罰文字
+            showHint(`計算結果有誤，請再仔細檢查通分和加減的計算過程！${pText}`);
         }
     }
 
